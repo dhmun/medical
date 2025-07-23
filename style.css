@@ -1,7 +1,7 @@
 
 body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; }
 h1 { text-align: center; color: #333; }
-.map-container { max-width: 900px; margin: auto; background-color: #ffffff; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 20px; box-sizing: border-box; }
+.map-container { position: relative; max-width: 900px; margin: auto; background-color: #ffffff; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 20px; box-sizing: border-box; overflow: hidden; }
 .map-container svg { width: 100%; height: auto; }
 .shape { stroke: #ffffff; stroke-width: 1.5px; transition: fill 0.3s ease; cursor: pointer; fill: #dcdcdc; }
 .shape:hover { fill: #fca951; }
@@ -9,14 +9,12 @@ h1 { text-align: center; color: #333; }
 .tooltip { position: absolute; background-color: rgba(0, 0, 0, 0.8); color: white; padding: 10px 15px; border-radius: 5px; font-size: 14px; pointer-events: none; opacity: 0; transition: opacity 0.2s; white-space: nowrap; z-index: 1000; }
 .tooltip h3 { margin: 0 0 8px 0; padding: 0 0 5px 0; font-size: 16px; border-bottom: 1px solid #777; }
 .tooltip p { margin: 4px 0; }
-/* Modal Styles */
-.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); z-index: 100; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s ease; }
+.modal-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); z-index: 100; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s ease; }
 .modal-overlay.visible { display: flex; opacity: 1; }
 .modal-content { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); width: 90%; max-width: 800px; max-height: 80vh; display: flex; flex-direction: column; }
 .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 15px; }
 .modal-title { margin: 0; font-size: 20px; }
 .modal-close { font-size: 24px; font-weight: bold; color: #aaa; cursor: pointer; border: none; background: none; }
-.modal-close:hover { color: #333; }
 .modal-body { overflow-y: auto; }
 .modal-table { border-collapse: collapse; width: 100%; }
 .modal-table th, .modal-table td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 13px; }

@@ -4,11 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>북한 의료 시설 현황 지도</title>
+    <title>북한 의료 시설 현황 인터랙티브 지도</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>북한 의료 시설 현황 지도</h1>
+    <h1>북한 의료 시설 현황 인터랙티브 지도</h1>
     <div class="map-container">
         
 <svg width="766" height="856" viewBox="0 0 766 856" fill="none" xmlns="http://www.w3.org/2000/svg" id="svgMain" preserveAspectRatio="xMinYMin meet" class="svg-content">
@@ -152,29 +152,23 @@
  </svg>
 
 
-    </div>
 
-    <div class="modal-overlay" id="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title" id="modal-title">상세 정보</h2>
-                <button class="modal-close" id="modal-close">&times;</button>
-            </div>
-            <div class="modal-body">
-                <table class="modal-table" id="modal-table">
-                    <thead>
-                        <tr>
-                            <th>카테고리</th>
-                            <th>이름</th>
-                            <th>주소</th>
-                            <th>군</th>
-                            <th>구</th>
-                            <th>인근시설</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        </tbody>
-                </table>
+        <div class="modal-overlay" id="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title" id="modal-title">상세 정보</h2>
+                    <button class="modal-close" id="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <table class="modal-table" id="modal-table">
+                        <thead>
+                            <tr>
+                                <th>카테고리</th><th>이름</th><th>주소</th><th>군</th><th>구</th><th>인근시설</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
