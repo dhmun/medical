@@ -9,9 +9,11 @@
 </head>
 <body>
     <h1>북한 의료 시설 현황</h1>
-    <div class="map-container">
+
+    <article class="interactive-map">
+        <div class="mouse-tooltip" id="tooltip"></div>
         
-<svg width="766" height="856" viewBox="0 0 766 856" fill="none" xmlns="http://www.w3.org/2000/svg" id="svgMain" preserveAspectRatio="xMinYMin meet" class="svg-content">
+<svg class="interactive-map__svg" width="766" height="856" viewBox="0 0 766 856" fill="none" xmlns="http://www.w3.org/2000/svg" id="svgMain" preserveAspectRatio="xMinYMin meet" class="svg-content">
 
  <g id="southPyongang" style="fill: rgb(237, 166, 151);">
 
@@ -152,10 +154,11 @@
  </svg>
 
 
-    </div>
-    <div id="table-container">
-        <h2 id="table-title">지도에서 지역을 클릭하여 상세 정보를 확인하세요</h2>
-        <table id="details-table">
+    </article>
+
+    <section class="data-table" id="table-container">
+        <h2 class="data-table__title" id="table-title">지도에서 지역을 클릭하여 상세 정보를 확인하세요</h2>
+        <table class="data-table__table" id="details-table">
             <thead>
                 <tr>
                     <th>카테고리</th>
@@ -166,109 +169,56 @@
                     <th>인근시설</th>
                 </tr>
             </thead>
-            <tbody></tbody>
+            <tbody>
+                </tbody>
         </table>
-    </div>
+    </section>
+
     <script>
         window.summaryMedicalData = {
   "kangwon": {
     "name": "강원도",
-    "총합": 11,
-    "병원": 0,
-    "약국": 8,
-    "요양소": 2,
-    "의학연구소": 1,
-    "제약공장": 0
+    "총합": 11
   },
   "rason": {
     "name": "라선시",
-    "총합": 3,
-    "병원": 0,
-    "약국": 0,
-    "요양소": 2,
-    "의학연구소": 0,
-    "제약공장": 1
+    "총합": 3
   },
   "ryanggang": {
     "name": "량강도",
-    "총합": 5,
-    "병원": 0,
-    "약국": 1,
-    "요양소": 3,
-    "의학연구소": 0,
-    "제약공장": 1
+    "총합": 5
   },
   "chagang": {
     "name": "자강도",
-    "총합": 21,
-    "병원": 0,
-    "약국": 2,
-    "요양소": 17,
-    "의학연구소": 0,
-    "제약공장": 2
+    "총합": 21
   },
   "southPyongang": {
     "name": "평안남도",
-    "총합": 24,
-    "병원": 0,
-    "약국": 14,
-    "요양소": 8,
-    "의학연구소": 1,
-    "제약공장": 1
+    "총합": 24
   },
   "northPyongang": {
     "name": "평안북도",
-    "총합": 34,
-    "병원": 0,
-    "약국": 18,
-    "요양소": 14,
-    "의학연구소": 2,
-    "제약공장": 0
+    "총합": 34
   },
   "pyongang": {
     "name": "평양시",
-    "총합": 300,
-    "병원": 26,
-    "약국": 219,
-    "요양소": 0,
-    "의학연구소": 19,
-    "제약공장": 36
+    "총합": 300
   },
   "southHamgyong": {
     "name": "함경남도",
-    "총합": 9,
-    "병원": 0,
-    "약국": 6,
-    "요양소": 1,
-    "의학연구소": 1,
-    "제약공장": 1
+    "총합": 9
   },
   "northHamgyong": {
     "name": "함경북도",
-    "총합": 9,
-    "병원": 0,
-    "약국": 0,
-    "요양소": 7,
-    "의학연구소": 2,
-    "제약공장": 0
+    "총합": 9
   },
   "southHwanghae": {
     "name": "황해남도",
-    "총합": 21,
-    "병원": 0,
-    "약국": 11,
-    "요양소": 9,
-    "의학연구소": 1,
-    "제약공장": 0
+    "총합": 21
   },
   "northHwanghae": {
     "name": "황해북도",
-    "총합": 9,
-    "병원": 0,
-    "약국": 7,
-    "요양소": 2,
-    "의학연구소": 0,
-    "제약공장": 0
+    "총합": 9
   }
 };
         window.detailedMedicalData = {
