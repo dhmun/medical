@@ -3,46 +3,25 @@ import json
 import sys
 
 # -------------------------------------------------------------------
-# Step 1: 엑셀 또는 CSV 파일 읽기
+# Step 1: 파일 읽기
 # -------------------------------------------------------------------
 try:
-    df = pd.read_csv('data.xlsx - 1.csv')
+    df = pd.read_excel('data.xlsx')
     print("✅ 'data.xlsx - 1.csv' 파일을 성공적으로 불러왔습니다.")
 except FileNotFoundError:
-    try:
-        df = pd.read_excel('data.xlsx')
-        print("✅ 'data.xlsx' 파일을 성공적으로 불러왔습니다.")
-    except FileNotFoundError:
-        print("❌ 'data.xlsx' 또는 'data.xlsx - 1.csv' 파일을 찾을 수 없습니다.")
-        sys.exit()
+    print("❌ 'data.xlsx - 1.csv' 파일을 찾을 수 없습니다.")
+    sys.exit()
 except Exception as e:
     print(f"파일을 읽는 중 오류가 발생했습니다: {e}")
     sys.exit()
 
 # -------------------------------------------------------------------
-# Step 2: 데이터 가공 (이전과 동일)
+# Step 2: 데이터 가공
 # -------------------------------------------------------------------
 
-# 지역 정보가 담긴 열 이름을 자동으로 찾습니다.
-if '도, 시' in df.columns:
-    상세_주소_열_이름 = '도, 시'
-elif '시' in df.columns:
-    상세_주소_열_이름 = '시'
-else:
-    print(f"❌ 오류: 지역 정보를 담고 있는 '도, 시' 또는 '시' 열을 찾을 수 없습니다.")
-    sys.exit()
+상세_주소_열_이름 = '도, 시'
+시설_이름_열 = '상점이름'
 
-if '상점이름' in df.columns:
-    시설_이름_열 = '상점이름'
-elif '이름' in df.columns:
-    시설_이름_열 = '이름'
-else:
-    print(f"❌ 오류: 시설 이름 정보를 담고 있는 '상점이름' 또는 '이름' 열을 찾을 수 없습니다.")
-    sys.exit()
-
-print(f"ℹ️ 지역 정보 열로 '{상세_주소_열_이름}'을, 시설 이름 열로 '{시설_이름_열}'을 사용합니다.")
-
-# SVG id와 데이터의 지역명을 매칭하기 위한 딕셔너리
 province_map = {
     '평양시': 'pyongang', '평안남도': 'southPyongang', '평안북도': 'northPyongang',
     '황해남도': 'southHwanghae', '황해북도': 'northHwanghae', '강원도': 'kangwon',
@@ -52,25 +31,24 @@ province_map = {
 
 def get_province(region):
     region_str = str(region).strip().strip('"')
+    if region_str.startswith('평양'): return '평양시'
     for prov_name in province_map.keys():
-        if region_str.startswith(prov_name):
-            return prov_name
+        if region_str.startswith(prov_name): return prov_name
     return None
 
 df['도'] = df[상세_주소_열_이름].apply(get_province)
+if '설명' not in df.columns: df['설명'] = ''
 if '인근시설' not in df.columns: df['인근시설'] = ''
 df.fillna('', inplace=True)
 df.dropna(subset=['도'], inplace=True)
 
 # --- 데이터 1: 도별 합계 (툴팁용) ---
-# 각 행을 시설 1개로 간주하여 '개수' 컬럼을 생성하고, 카테고리별로 집계
 summary_json = {}
 grouped_by_province = df.groupby('도')
 
 for province_name, group in grouped_by_province:
     if province_name in province_map:
         svg_id = province_map[province_name]
-        
         counts = {
             'name': province_name,
             '총합': len(group),
@@ -92,7 +70,6 @@ for prov_name, svg_id in province_map.items():
 summary_json_string = json.dumps(summary_json, indent=2, ensure_ascii=False)
 detailed_json_string = json.dumps(detailed_json, indent=2, ensure_ascii=False)
 print("\n✅ SVG 지도 연동용 요약 및 상세 JSON 데이터 생성을 완료했습니다.")
-
 
 # -------------------------------------------------------------------
 # Step 3: 분리된 HTML, CSS, JavaScript 파일 생성
@@ -242,132 +219,51 @@ svg_code = """
 
 """
 
+# ✨ 핵심 수정 1: 팝업(모달)과 관련된 CSS 스타일 추가
 css_content = """
-body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; flex-direction: column; }
-h1 { color: #333; }
-.map-container, #table-container { width: 900px; background-color: #ffffff; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 20px; box-sizing: border-box; }
-.map-container { height: 900px; margin-bottom: 20px; }
-#table-container { max-height: 500px; overflow-y: auto; }
-.shape { stroke: #ffffff; stroke-width: 1.5px; transition: fill 0.3s ease; cursor: pointer; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; }
+h1 { text-align: center; color: #333; }
+.map-container { max-width: 900px; margin: auto; background-color: #ffffff; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 20px; box-sizing: border-box; }
+.map-container svg { width: 100%; height: auto; }
+.shape { stroke: #ffffff; stroke-width: 1.5px; transition: fill 0.3s ease; cursor: pointer; fill: #dcdcdc; }
 .shape:hover { fill: #fca951; }
 .shape.active { fill: #f97300; }
-.tooltip { position: absolute; background-color: rgba(0, 0, 0, 0.8); color: white; padding: 10px 15px; border-radius: 5px; font-size: 14px; pointer-events: none; opacity: 0; transition: opacity 0.3s ease; white-space: nowrap; z-index: 100; }
-.tooltip h3 { margin: 0 0 5px 0; padding: 0; font-size: 16px; border-bottom: 1px solid #555; padding-bottom: 5px; }
-.tooltip p { margin: 3px 0; }
-#details-table { border-collapse: collapse; width: 100%; }
-#details-table th, #details-table td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-#details-table th { background-color: #f2f2f2; font-weight: bold; }
-#details-table tbody tr:nth-child(even) { background-color: #f9f9f9; }
-#details-table tbody tr:hover { background-color: #e6f7ff; }
-"""
-
-js_content = """
-document.addEventListener('DOMContentLoaded', function () {
-    const summaryData = window.summaryMedicalData || {};
-    const detailedData = window.detailedMedicalData || {};
-
-    const svg = document.getElementById('svgMain');
-    if (!svg) {
-        console.error('지도 SVG를 찾을 수 없습니다. HTML에 SVG 코드가 올바르게 포함되었는지 확인하세요.');
-        return;
-    }
-
-    const provinces = svg.querySelectorAll('g[id]');
-    const tooltip = document.createElement('div');
-    tooltip.className = 'tooltip';
-    document.body.appendChild(tooltip);
-
-    const tableTitle = document.getElementById('table-title');
-    const tableBody = document.querySelector('#details-table tbody');
-
-    let activeProvinceShape = null;
-
-    provinces.forEach(province => {
-        const provinceId = province.id;
-        const shape = province.querySelector('.shape');
-
-        if (shape && summaryData[provinceId]) {
-            shape.addEventListener('mouseover', e => {
-                const data = summaryData[provinceId];
-                tooltip.style.opacity = 1;
-                tooltip.innerHTML = `<h3>${data.name}</h3><p><strong>총합:</strong> ${data['총합']} 개</p><hr><p>병원: ${data['병원']} | 약국: ${data['약국']}</p>`;
-            });
-            shape.addEventListener('mousemove', e => {
-                tooltip.style.left = `${e.pageX + 15}px`;
-                tooltip.style.top = `${e.pageY + 15}px`;
-            });
-            shape.addEventListener('mouseout', () => tooltip.style.opacity = 0);
-
-            shape.addEventListener('click', () => {
-                if(activeProvinceShape) {
-                    activeProvinceShape.classList.remove('active');
-                }
-                shape.classList.add('active');
-                activeProvinceShape = shape;
-
-                const provinceName = summaryData[provinceId].name;
-                const facilities = detailedData[provinceId] || [];
-
-                tableTitle.textContent = `${provinceName} 상세 정보 (${facilities.length}개)`;
-                tableBody.innerHTML = '';
-
-                if (facilities.length === 0) {
-                    tableBody.innerHTML = '<tr><td colspan="3">해당 지역의 상세 데이터가 없습니다.</td></tr>';
-                    return;
-                }
-
-                facilities.forEach(facility => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${facility['이름'] || 'N/A'}</td>
-                        <td>${facility['카테고리'] || 'N/A'}</td>
-                        <td>${facility['인근시설'] || ''}</td>
-                    `;
-                    tableBody.appendChild(row);
-                });
-            });
-        }
-    });
-});
-"""
-css_content = """
-body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; flex-direction: column; }
-h1 { color: #333; }
-.map-container, #table-container { width: 900px; background-color: #ffffff; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 20px; box-sizing: border-box; }
-.map-container { height: 900px; margin-bottom: 20px; }
-#table-container { max-height: 500px; overflow-y: auto; }
-.shape { stroke: #ffffff; stroke-width: 1.5px; transition: fill 0.3s ease; cursor: pointer; }
-.shape:hover { fill: #fca951; }
-.shape.active { fill: #f97300; }
-.tooltip { position: absolute; background-color: rgba(0, 0, 0, 0.8); color: white; padding: 10px 15px; border-radius: 5px; font-size: 14px; pointer-events: none; opacity: 0; transition: opacity 0.3s ease; white-space: nowrap; z-index: 100; }
+.tooltip { position: absolute; background-color: rgba(0, 0, 0, 0.8); color: white; padding: 10px 15px; border-radius: 5px; font-size: 14px; pointer-events: none; opacity: 0; transition: opacity 0.2s; white-space: nowrap; z-index: 1000; }
 .tooltip h3 { margin: 0 0 8px 0; padding: 0 0 5px 0; font-size: 16px; border-bottom: 1px solid #777; }
 .tooltip p { margin: 4px 0; }
-#details-table { border-collapse: collapse; width: 100%; }
-#details-table th, #details-table td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-#details-table th { background-color: #f2f2f2; font-weight: bold; }
-#details-table tbody tr:nth-child(even) { background-color: #f9f9f9; }
-#details-table tbody tr:hover { background-color: #e6f7ff; }
+/* Modal Styles */
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); z-index: 100; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s ease; }
+.modal-overlay.visible { display: flex; opacity: 1; }
+.modal-content { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); width: 90%; max-width: 800px; max-height: 80vh; display: flex; flex-direction: column; }
+.modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 15px; }
+.modal-title { margin: 0; font-size: 20px; }
+.modal-close { font-size: 24px; font-weight: bold; color: #aaa; cursor: pointer; border: none; background: none; }
+.modal-close:hover { color: #333; }
+.modal-body { overflow-y: auto; }
+.modal-table { border-collapse: collapse; width: 100%; }
+.modal-table th, .modal-table td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 13px; }
+.modal-table th { background-color: #f2f2f2; }
 """
 
-# ✨ 핵심 수정: 툴팁에 표시될 HTML 내용을 상세하게 변경
+# ✨ 핵심 수정 2: 팝업(모달)을 제어하는 JavaScript 로직 추가
 js_content = """
 document.addEventListener('DOMContentLoaded', function () {
     const summaryData = window.summaryMedicalData || {};
     const detailedData = window.detailedMedicalData || {};
     
     const svg = document.getElementById('svgMain');
-    if (!svg) {
-        console.error('지도 SVG를 찾을 수 없습니다.');
-        return;
-    }
+    if (!svg) return;
     
     const provinces = svg.querySelectorAll('g[id]');
     const tooltip = document.createElement('div');
     tooltip.className = 'tooltip';
     document.body.appendChild(tooltip);
 
-    const tableTitle = document.getElementById('table-title');
-    const tableBody = document.querySelector('#details-table tbody');
+    // Modal DOM 요소
+    const modalOverlay = document.getElementById('modal-overlay');
+    const modalTitle = document.getElementById('modal-title');
+    const modalCloseBtn = document.getElementById('modal-close');
+    const modalTableBody = document.querySelector('#modal-table tbody');
     
     let activeProvinceShape = null;
 
@@ -379,16 +275,13 @@ document.addEventListener('DOMContentLoaded', function () {
             shape.addEventListener('mouseover', e => {
                 const data = summaryData[provinceId];
                 tooltip.style.opacity = 1;
-                // 툴팁에 표시될 내용을 상세하게 구성
                 tooltip.innerHTML = `
                     <h3>${data.name}</h3>
                     <p><strong>총 시설 수: ${data['총합']}</strong></p>
-                    <p>-------------</p>
-                    <p>병원: ${data['병원']}</p>
-                    <p>약국: ${data['약국']}</p>
-                    <p>요양소: ${data['요양소']}</p>
-                    <p>의학연구소: ${data['의학연구소']}</p>
-                    <p>제약공장: ${data['제약공장']}</p>
+                    <p style="border-top: 1px solid #777; margin-top: 5px; padding-top: 5px;">
+                        병원: ${data['병원']} | 약국: ${data['약국']} | 요양소: ${data['요양소']}<br>
+                        연구소: ${data['의학연구소']} | 제약공장: ${data['제약공장']}
+                    </p>
                 `;
             });
             shape.addEventListener('mousemove', e => {
@@ -398,41 +291,48 @@ document.addEventListener('DOMContentLoaded', function () {
             shape.addEventListener('mouseout', () => tooltip.style.opacity = 0);
 
             shape.addEventListener('click', () => {
-                if(activeProvinceShape) {
-                    activeProvinceShape.classList.remove('active');
-                }
+                if (activeProvinceShape) activeProvinceShape.classList.remove('active');
                 shape.classList.add('active');
                 activeProvinceShape = shape;
 
                 const provinceName = summaryData[provinceId].name;
                 const facilities = detailedData[provinceId] || [];
 
-                tableTitle.textContent = `${provinceName} 상세 정보 (${facilities.length}개)`;
-                tableBody.innerHTML = '';
+                modalTitle.textContent = `${provinceName} 상세 정보 (${facilities.length}개)`;
+                modalTableBody.innerHTML = '';
 
-                if (facilities.length === 0) {
-                    tableBody.innerHTML = '<tr><td colspan="7">해당 지역의 상세 데이터가 없습니다.</td></tr>';
-                    return;
+                if (facilities.length > 0) {
+                    const rowsHtml = facilities.map(f => `
+                        <tr>
+                            <td>${f['카테고리'] || ''}</td>
+                            <td>${f['이름'] || ''}</td>
+                            <td>${f['주소'] || ''}</td>
+                            <td>${f['군'] || ''}</td>
+                            <td>${f['구'] || ''}</td>
+                            <td>${f['인근시설'] || ''}</td>
+                        </tr>
+                    `).join('');
+                    modalTableBody.innerHTML = rowsHtml;
+                } else {
+                    modalTableBody.innerHTML = '<tr><td colspan="6">해당 지역의 상세 데이터가 없습니다.</td></tr>';
                 }
                 
-                facilities.forEach(facility => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${facility['카테고리'] || ''}</td>
-                        <td>${facility['이름'] || ''}</td>
-                        <td>${facility['주소'] || ''}</td>
-                        <td>${facility['군'] || ''}</td>
-                        <td>${facility['구'] || ''}</td>
-                        <td>${facility['인근시설'] || ''}</td>
-                    `;
-                    tableBody.appendChild(row);
-                });
+                modalOverlay.classList.add('visible');
             });
+        }
+    });
+    
+    // Modal 닫기 이벤트
+    modalCloseBtn.addEventListener('click', () => modalOverlay.classList.remove('visible'));
+    modalOverlay.addEventListener('click', e => {
+        if (e.target === modalOverlay) {
+            modalOverlay.classList.remove('visible');
         }
     });
 });
 """
 
+# ✨ 핵심 수정 3: HTML에 팝업(모달) 구조를 추가하고, 하단 테이블은 제거
 html_template = f"""
 <!DOCTYPE html>
 <html lang="ko">
@@ -447,22 +347,32 @@ html_template = f"""
     <div class="map-container">
         {svg_code}
     </div>
-    <div id="table-container">
-        <h2 id="table-title">지도에서 지역을 클릭하여 상세 정보를 확인하세요</h2>
-        <table id="details-table">
-            <thead>
-                <tr>
-                    <th>카테고리</th>
-                    <th>이름</th>
-                    <th>주소</th>
-                    <th>군</th>
-                    <th>구</th>
-                    <th>인근시설</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
+
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modal-title">상세 정보</h2>
+                <button class="modal-close" id="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <table class="modal-table" id="modal-table">
+                    <thead>
+                        <tr>
+                            <th>카테고리</th>
+                            <th>이름</th>
+                            <th>주소</th>
+                            <th>군</th>
+                            <th>구</th>
+                            <th>인근시설</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        </tbody>
+                </table>
+            </div>
+        </div>
     </div>
+
     <script>
         window.summaryMedicalData = {summary_json_string};
         window.detailedMedicalData = {detailed_json_string};
