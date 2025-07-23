@@ -79,3 +79,28 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 });
+
+
+// script.js 파일 맨 아래에 추가
+
+// iframe의 실제 높이를 부모 페이지(워드프레스)로 전송하는 함수
+function sendIframeHeight() {
+  // body 요소의 실제 높이를 계산합니다.
+  const body = document.body;
+  const html = document.documentElement;
+  const height = Math.max(body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight);
+
+  // 부모 페이지로 높이 정보를 메시지로 보냅니다.
+  if (window.parent) {
+    window.parent.postMessage({
+      'iframeHeight': height,
+      'iframeSrc': window.location.href
+    }, '*');
+  }
+}
+
+// 페이지의 모든 콘텐츠(이미지 등)가 로드된 후 높이를 전송합니다.
+window.addEventListener('load', sendIframeHeight);
+
+// 창 크기가 변경될 때도 높이를 다시 계산하여 전송합니다.
+window.addEventListener('resize', sendIframeHeight);
